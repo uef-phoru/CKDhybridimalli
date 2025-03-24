@@ -1,270 +1,529 @@
 <!DOCTYPE html>
-<html>
+<html lang="fi">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Kokonaiskustannuslaskuri: munuaistautiseulonta</title>
-  
-  <!-- Shiny-vastaavat kirjastot -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
-  
-  <!-- Bootstrap CSS -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.2.3/css/bootstrap.min.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.2.3/js/bootstrap.bundle.min.js"></script>
-  
-  <style>
-    body {
-      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-      padding: 20px;
-    }
-    
-    .sidebar {
-      background-color: #f8f9fa;
-      padding: 15px;
-      border-radius: 5px;
-      margin-bottom: 20px;
-    }
-    
-    .slider-container {
-      margin-bottom: 20px;
-      padding: 10px;
-      border: 1px solid #e0e0e0;
-      border-radius: 5px;
-      background-color: white;
-    }
-    
-    .slider-value {
-      font-weight: bold;
-      margin-left: 10px;
-    }
-    
-    .plot-container {
-      margin-top: 20px;
-      border: 1px solid #e0e0e0;
-      border-radius: 5px;
-      padding: 10px;
-      background-color: white;
-    }
-    
-    .plot-title {
-      font-weight: bold;
-      margin-bottom: 10px;
-    }
-    
-    .results-container {
-      background-color: #f0f8ff;
-      padding: 20px;
-      border-radius: 5px;
-      margin-bottom: 20px;
-    }
-    
-    .total-cost {
-      font-size: 24px;
-      font-weight: bold;
-      color: #0056b3;
-    }
-    
-    h4 {
-      color: #0056b3;
-    }
-    
-    @media (max-width: 768px) {
-      .col-md-4, .col-md-8 {
-        width: 100%;
-      }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kokonaiskustannuslaskuri: munuaistautiseulonta</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        .app-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .title-panel {
+            width: 100%;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 20px;
+        }
+        .sidebar {
+            flex: 1;
+            min-width: 300px;
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .main-panel {
+            flex: 2;
+            min-width: 500px;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1, h2, h3, h4 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
+        .form-group {
+            margin-bottom: 20px;
+            border: 1px solid #eee;
+            padding: 15px;
+            border-radius: 5px;
+            background: white;
+        }
+        .form-control {
+            display: block;
+            width: 100%;
+            padding: 8px 12px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+        .slider-container {
+            margin: 10px 0;
+        }
+        .slider-value {
+            display: inline-block;
+            width: 60px;
+            text-align: right;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .results-section {
+            margin-bottom: 30px;
+        }
+        .cost-display {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c3e50;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .chart-container {
+            margin-bottom: 30px;
+            height: 300px;
+        }
+        .radio-group {
+            margin: 10px 0;
+        }
+        .radio-group label {
+            margin-right: 15px;
+        }
+    </style>
 </head>
 <body>
-  <div class="container">
-    <h2 class="text-center mb-4">Kokonaiskustannuslaskuri: munuaistautiseulonta</h2>
-    
-    <div class="row">
-      <!-- Sidebar Panel -->
-      <div class="col-md-4 sidebar">
-        <div class="form-group mb-3">
-          <label for="nindividuals">Lähtöhenkilömäärä:</label>
-          <input type="number" id="nindividuals" class="form-control" value="1000" min="1">
+    <div class="app-container">
+        <div class="title-panel">
+            <h1>Kokonaiskustannuslaskuri: munuaistautiseulonta</h1>
         </div>
         
-        <!-- Vaiheet -->
-        <div id="vaiheet-container">
-          <!-- Vaiheet generoidaan JavaScriptillä -->
-        </div>
-      </div>
-      
-      <!-- Main Panel -->
-      <div class="col-md-8">
-        <div class="results-container">
-          <h3>Kokonaiskustannus:</h3>
-          <div id="kokonaiskustannus" class="total-cost">0 €</div>
+        <div class="sidebar">
+            <div class="form-group">
+                <label for="nindividuals">Lähtöhenkilömäärä:</label>
+                <input type="number" id="nindividuals" class="form-control" value="1000" min="1">
+            </div>
+            
+            <div class="form-group">
+                <h4>Henkilö tavoitetaan</h4>
+                <div class="slider-container">
+                    <label>Etenemisprosentti (1–100):</label>
+                    <input type="range" id="eteneminen1" min="0.01" max="1" step="0.01" value="0.5">
+                    <span id="eteneminen1Value" class="slider-value">50%</span>
+                </div>
+                <div class="slider-container">
+                    <label>Kustannus/henkilö (€):</label>
+                    <input type="range" id="kustannus1" min="0" max="100" step="1" value="10">
+                    <span id="kustannus1Value" class="slider-value">10€</span>
+                </div>
+                <div class="radio-group">
+                    <label>Kustannus ennen vai jälkeen etenemisen?</label><br>
+                    <input type="radio" id="ennen1" name="ennen_vai_jalkeen1" value="ennen" checked>
+                    <label for="ennen1">Ennen</label>
+                    <input type="radio" id="jalkeen1" name="ennen_vai_jalkeen1" value="jalkeen">
+                    <label for="jalkeen1">Jälkeen</label>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <h4>Positiivinen tulos</h4>
+                <div class="slider-container">
+                    <label>Etenemisprosentti (1–100):</label>
+                    <input type="range" id="eteneminen2" min="0.01" max="1" step="0.01" value="0.5">
+                    <span id="eteneminen2Value" class="slider-value">50%</span>
+                </div>
+                <div class="slider-container">
+                    <label>Kustannus/henkilö (€):</label>
+                    <input type="range" id="kustannus2" min="0" max="100" step="1" value="10">
+                    <span id="kustannus2Value" class="slider-value">10€</span>
+                </div>
+                <div class="radio-group">
+                    <label>Kustannus ennen vai jälkeen etenemisen?</label><br>
+                    <input type="radio" id="ennen2" name="ennen_vai_jalkeen2" value="ennen" checked>
+                    <label for="ennen2">Ennen</label>
+                    <input type="radio" id="jalkeen2" name="ennen_vai_jalkeen2" value="jalkeen">
+                    <label for="jalkeen2">Jälkeen</label>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <h4>Diagnoosi ja hoitosuunnitelma</h4>
+                <div class="slider-container">
+                    <label>Etenemisprosentti (1–100):</label>
+                    <input type="range" id="eteneminen3" min="0.01" max="1" step="0.01" value="0.5">
+                    <span id="eteneminen3Value" class="slider-value">50%</span>
+                </div>
+                <div class="slider-container">
+                    <label>Kustannus/henkilö (€):</label>
+                    <input type="range" id="kustannus3" min="0" max="100" step="1" value="10">
+                    <span id="kustannus3Value" class="slider-value">10€</span>
+                </div>
+                <div class="radio-group">
+                    <label>Kustannus ennen vai jälkeen etenemisen?</label><br>
+                    <input type="radio" id="ennen3" name="ennen_vai_jalkeen3" value="ennen" checked>
+                    <label for="ennen3">Ennen</label>
+                    <input type="radio" id="jalkeen3" name="ennen_vai_jalkeen3" value="jalkeen">
+                    <label for="jalkeen3">Jälkeen</label>
+                </div>
+            </div>
+            
+            <button id="lataaCSV">Lataa tulokset CSV-tiedostona</button>
         </div>
         
-        <div class="plot-container">
-          <div class="plot-title">Henkilömäärä vaiheittain</div>
-          <div id="maaraPlot" style="height: 300px;"></div>
+        <div class="main-panel">
+            <div class="results-section">
+                <h3>Kokonaiskustannus:</h3>
+                <div id="kokonaiskustannus" class="cost-display">0</div>
+            </div>
+            
+            <div class="results-section">
+                <table id="taulukko">
+                    <thead>
+                        <tr>
+                            <th>Vaihe</th>
+                            <th>Määrä</th>
+                            <th>Kustannus</th>
+                            <th>Kumulatiivinen määrä</th>
+                            <th>Kumulatiivinen kustannus</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            
+            <div class="chart-container">
+                <canvas id="maaraPlot"></canvas>
+            </div>
+            
+            <div class="chart-container">
+                <canvas id="kustannusPlot"></canvas>
+            </div>
         </div>
-        
-        <div class="plot-container">
-          <div class="plot-title">Kustannus vaiheittain (€)</div>
-          <div id="kustannusPlot" style="height: 300px;"></div>
-        </div>
-      </div>
     </div>
-  </div>
-  
-  <script>
-    // Vaiheet
-    const vaiheet = [
-      "Seulontaan", "Positiivinen tulos", "Diagnoosin varmistus",
-      "Krooninen munuaistauti vahvistuu", "Diagnoosin asettaminen",
-      "Hoitosuunnitelma", "Jatkuva seuranta"
-    ];
     
-    // Luo vaiheisiin liittyvät liukusäädöt
-    function createSliders() {
-      const container = document.getElementById('vaiheet-container');
-      
-      vaiheet.forEach((vaihe, i) => {
-        const vaiheDivId = `vaihe-${i}`;
-        const etenemisId = `eteneminen${i+1}`;
-        const kustannusId = `kustannus${i+1}`;
+    <script>
+        const vaiheet = [
+            "Henkilö tavoitetaan",
+            "Positiivinen tulos",
+            "Diagnoosi ja hoitosuunnitelma"
+        ];
         
-        const div = document.createElement('div');
-        div.id = vaiheDivId;
-        div.className = 'slider-container';
+        // Set up slider value displays
+        for (let i = 1; i <= vaiheet.length; i++) {
+            document.getElementById(`eteneminen${i}`).addEventListener('input', function() {
+                document.getElementById(`eteneminen${i}Value`).textContent = Math.round(this.value * 100) + '%';
+                updateCalculations();
+            });
+            
+            document.getElementById(`kustannus${i}`).addEventListener('input', function() {
+                document.getElementById(`kustannus${i}Value`).textContent = this.value + '€';
+                updateCalculations();
+            });
+            
+            // Attach event listeners to radio buttons
+            document.getElementsByName(`ennen_vai_jalkeen${i}`).forEach(radio => {
+                radio.addEventListener('change', updateCalculations);
+            });
+        }
         
-        div.innerHTML = `
-          <h4>${vaihe}</h4>
-          <div class="form-group mb-3">
-            <label for="${etenemisId}">Etenemisprosentti: <span id="${etenemisId}-value" class="slider-value">0.5</span></label>
-            <input type="range" id="${etenemisId}" class="form-range" min="0.1" max="1.0" step="0.1" value="0.5">
-          </div>
-          <div class="form-group">
-            <label for="${kustannusId}">Kustannus/henkilö (€): <span id="${kustannusId}-value" class="slider-value">10</span></label>
-            <input type="range" id="${kustannusId}" class="form-range" min="0" max="100" step="10" value="10">
-          </div>
-        `;
+        // Attach event listener to number input
+        document.getElementById('nindividuals').addEventListener('input', updateCalculations);
         
-        container.appendChild(div);
+        // Chart instances
+        let maaraChart = null;
+        let kustannusChart = null;
         
-        // Kuuntelijat liukusäätimille
-        document.getElementById(etenemisId).addEventListener('input', function() {
-          document.getElementById(`${etenemisId}-value`).textContent = this.value;
-          updateResults();
+        // Initial calculation
+        updateCalculations();
+        
+        function updateCalculations() {
+            const n = parseInt(document.getElementById('nindividuals').value);
+            let kokonaiskustannus = 0;
+            let results = [];
+            let currentN = n;
+            
+            for (let i = 1; i <= vaiheet.length; i++) {
+                const eteneminen = parseFloat(document.getElementById(`eteneminen${i}`).value);
+                const kustannusKerroin = parseFloat(document.getElementById(`kustannus${i}`).value);
+                const kustannusAika = document.querySelector(`input[name="ennen_vai_jalkeen${i}"]:checked`).value;
+                
+                let vaiheMaara, vaiheKustannus;
+                
+                if (kustannusAika === 'ennen') {
+                    vaiheKustannus = currentN * kustannusKerroin;
+                    kokonaiskustannus += vaiheKustannus;
+                    currentN = currentN * eteneminen;
+                    vaiheMaara = currentN;
+                } else {
+                    currentN = currentN * eteneminen;
+                    vaiheMaara = currentN;
+                    vaiheKustannus = currentN * kustannusKerroin;
+                    kokonaiskustannus += vaiheKustannus;
+                }
+                
+                results.push({
+                    vaihe: vaiheet[i-1],
+                    maara: vaiheMaara,
+                    kustannus: vaiheKustannus,
+                    kumulatiivinenKustannus: kokonaiskustannus
+                });
+            }
+            
+            // Calculate cumulative amounts
+            for (let i = 0; i < results.length; i++) {
+                results[i].kumulatiivinenMaara = results.slice(0, i+1).reduce((sum, item) => sum + item.maara, 0);
+            }
+            
+            // Update total cost display
+            document.getElementById('kokonaiskustannus').textContent = 
+                formatNumber(Math.round(kokonaiskustannus)) + ' €';
+            
+            // Update table
+            updateTable(results);
+            
+            // Update charts
+            updateCharts(results);
+        }
+        
+        function updateTable(results) {
+            const tbody = document.querySelector('#taulukko tbody');
+            tbody.innerHTML = '';
+            
+            results.forEach(row => {
+                const tr = document.createElement('tr');
+                
+                tr.innerHTML = `
+                    <td>${row.vaihe}</td>
+                    <td>${formatNumber(Math.round(row.maara))}</td>
+                    <td>${formatNumber(Math.round(row.kustannus))} €</td>
+                    <td>${formatNumber(Math.round(row.kumulatiivinenMaara))}</td>
+                    <td>${formatNumber(Math.round(row.kumulatiivinenKustannus))} €</td>
+                `;
+                
+                tbody.appendChild(tr);
+            });
+        }
+        
+        function updateCharts(results) {
+            const labels = results.map(row => row.vaihe);
+            const maarat = results.map(row => row.maara);
+            const kustannukset = results.map(row => row.kustannus);
+            const kumMaarat = results.map(row => row.kumulatiivinenMaara);
+            const kumKustannukset = results.map(row => row.kumulatiivinenKustannus);
+            
+            // Update or create the Määrä chart
+            if (maaraChart) {
+                maaraChart.data.labels = labels;
+                maaraChart.data.datasets[0].data = maarat;
+                maaraChart.data.datasets[1].data = kumMaarat;
+                maaraChart.update();
+            } else {
+                maaraChart = new Chart(document.getElementById('maaraPlot').getContext('2d'), {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            {
+                                label: 'Määrä',
+                                data: maarat,
+                                backgroundColor: 'steelblue',
+                                barPercentage: 0.6
+                            },
+                            {
+                                label: 'Kumulatiivinen määrä',
+                                data: kumMaarat,
+                                type: 'line',
+                                borderColor: 'black',
+                                borderWidth: 2,
+                                pointBackgroundColor: 'black',
+                                fill: false
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: 'Henkilömäärä vaiheittain + kumulatiivinen',
+                                font: { size: 16 }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return context.dataset.label + ': ' + formatNumber(Math.round(context.raw));
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return formatNumber(value);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // Update or create the Kustannus chart
+            if (kustannusChart) {
+                kustannusChart.data.labels = labels;
+                kustannusChart.data.datasets[0].data = kustannukset;
+                kustannusChart.data.datasets[1].data = kumKustannukset;
+                kustannusChart.update();
+            } else {
+                kustannusChart = new Chart(document.getElementById('kustannusPlot').getContext('2d'), {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            {
+                                label: 'Kustannus',
+                                data: kustannukset,
+                                backgroundColor: 'darkorange',
+                                barPercentage: 0.6
+                            },
+                            {
+                                label: 'Kumulatiivinen kustannus',
+                                data: kumKustannukset,
+                                type: 'line',
+                                borderColor: 'black',
+                                borderWidth: 2,
+                                pointBackgroundColor: 'black',
+                                fill: false
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: 'Kustannus vaiheittain + kumulatiivinen (€)',
+                                font: { size: 16 }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return context.dataset.label + ': ' + formatNumber(Math.round(context.raw)) + ' €';
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return formatNumber(value) + ' €';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+        
+        function formatNumber(num) {
+            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+        }
+        
+        // Handle CSV download
+        document.getElementById('lataaCSV').addEventListener('click', function() {
+            const n = parseInt(document.getElementById('nindividuals').value);
+            let kokonaiskustannus = 0;
+            let results = [];
+            let currentN = n;
+            
+            for (let i = 1; i <= vaiheet.length; i++) {
+                const eteneminen = parseFloat(document.getElementById(`eteneminen${i}`).value);
+                const kustannusKerroin = parseFloat(document.getElementById(`kustannus${i}`).value);
+                const kustannusAika = document.querySelector(`input[name="ennen_vai_jalkeen${i}"]:checked`).value;
+                
+                let vaiheMaara, vaiheKustannus;
+                
+                if (kustannusAika === 'ennen') {
+                    vaiheKustannus = currentN * kustannusKerroin;
+                    kokonaiskustannus += vaiheKustannus;
+                    currentN = currentN * eteneminen;
+                    vaiheMaara = currentN;
+                } else {
+                    currentN = currentN * eteneminen;
+                    vaiheMaara = currentN;
+                    vaiheKustannus = currentN * kustannusKerroin;
+                    kokonaiskustannus += vaiheKustannus;
+                }
+                
+                results.push({
+                    Vaihe: vaiheet[i-1],
+                    Maara: formatNumber(Math.round(vaiheMaara)),
+                    Kustannus: formatNumber(Math.round(vaiheKustannus)),
+                    KumulatiivinenMaara: '',
+                    KumulatiivinenKustannus: formatNumber(Math.round(kokonaiskustannus))
+                });
+            }
+            
+            // Calculate cumulative amounts
+            let cumulativeAmount = 0;
+            for (let i = 0; i < results.length; i++) {
+                cumulativeAmount += parseFloat(results[i].Maara.replace(/\s/g, ''));
+                results[i].KumulatiivinenMaara = formatNumber(Math.round(cumulativeAmount));
+            }
+            
+            // Generate CSV
+            const csv = Papa.unparse(results);
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            
+            link.setAttribute('href', url);
+            link.setAttribute('download', `seulontatulokset_${new Date().toISOString().slice(0, 10)}.csv`);
+            link.style.visibility = 'hidden';
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         });
-        
-        document.getElementById(kustannusId).addEventListener('input', function() {
-          document.getElementById(`${kustannusId}-value`).textContent = this.value;
-          updateResults();
-        });
-      });
-    }
-    
-    // Päivitä laskelmat ja kaaviot
-    function updateResults() {
-      let n = parseInt(document.getElementById('nindividuals').value) || 1000;
-      let kokonaiskustannus = 0;
-      let tulokset = [];
-      
-      for (let i = 0; i < vaiheet.length; i++) {
-        const eteneminen = parseFloat(document.getElementById(`eteneminen${i+1}`).value);
-        const kustannuskerroin = parseFloat(document.getElementById(`kustannus${i+1}`).value);
-        
-        n = n * eteneminen;
-        const kustannus = n * kustannuskerroin;
-        kokonaiskustannus += kustannus;
-        
-        tulokset.push({
-          Vaihe: vaiheet[i],
-          Maara: n,
-          Kustannus: kustannus
-        });
-      }
-      
-      // Päivitä kokonaiskustannus
-      document.getElementById('kokonaiskustannus').textContent = `${kokonaiskustannus.toFixed(2)} €`;
-      
-      // Piirrä kaaviot
-      createBarChart('maaraPlot', tulokset, 'Maara', 'steelblue');
-      createBarChart('kustannusPlot', tulokset, 'Kustannus', 'darkorange');
-    }
-    
-    // Luo pylväskaavio D3.js:llä
-    function createBarChart(elementId, data, valueKey, color) {
-      const element = document.getElementById(elementId);
-      element.innerHTML = '';
-      
-      const margin = {top: 20, right: 30, bottom: 90, left: 60};
-      const width = element.clientWidth - margin.left - margin.right;
-      const height = element.clientHeight - margin.top - margin.bottom;
-      
-      const svg = d3.select(`#${elementId}`)
-        .append('svg')
-        .attr('width', element.clientWidth)
-        .attr('height', element.clientHeight)
-        .append('g')
-        .attr('transform', `translate(${margin.left},${margin.top})`);
-      
-      // X-akseli
-      const x = d3.scaleBand()
-        .domain(data.map(d => d.Vaihe))
-        .range([0, width])
-        .padding(0.2);
-      
-      svg.append('g')
-        .attr('transform', `translate(0,${height})`)
-        .call(d3.axisBottom(x))
-        .selectAll('text')
-        .attr('transform', 'translate(-10,0)rotate(-45)')
-        .style('text-anchor', 'end');
-      
-      // Y-akseli
-      const y = d3.scaleLinear()
-        .domain([0, d3.max(data, d => d[valueKey]) * 1.1])
-        .range([height, 0]);
-      
-      svg.append('g')
-        .call(d3.axisLeft(y));
-      
-      // Pylväät
-      svg.selectAll('rect')
-        .data(data)
-        .enter()
-        .append('rect')
-        .attr('x', d => x(d.Vaihe))
-        .attr('y', d => y(d[valueKey]))
-        .attr('width', x.bandwidth())
-        .attr('height', d => height - y(d[valueKey]))
-        .attr('fill', color);
-      
-      // Y-akselin otsikko
-      svg.append('text')
-        .attr('transform', 'rotate(-90)')
-        .attr('y', -margin.left + 20)
-        .attr('x', -height / 2)
-        .attr('text-anchor', 'middle')
-        .text(valueKey === 'Maara' ? 'Määrä' : 'Kustannus (€)');
-    }
-    
-    // Alusta kaikki
-    document.addEventListener('DOMContentLoaded', function() {
-      createSliders();
-      
-      // Lähtöhenkilömäärän muutoskuuntelija
-      document.getElementById('nindividuals').addEventListener('input', updateResults);
-      
-      // Päivitä tulokset ensimmäisen kerran
-      updateResults();
-      
-      // Ikkunan koon muutoksen kuuntelijat kaavioiden uudelleenpiirtämiseen
-      window.addEventListener('resize', function() {
-        updateResults();
-      });
-    });
-  </script>
+    </script>
 </body>
 </html>
